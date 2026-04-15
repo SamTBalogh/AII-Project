@@ -1,0 +1,177 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block titulo %}Cards in Standard Format{% endblock %}
+
+{% block contenido %}
+<style>
+    .precio-alto {
+        color: #d32f2f;
+        font-weight: bold;
+    }
+    .precio-medio {
+        color: #f57c00;
+        font-weight: bold;
+    }
+    .precio-bajo {
+        color: #388e3c;
+        font-weight: bold;
+    }
+    .card-link {
+        color: inherit;
+        text-decoration: none;
+    }
+    .card-link:hover {
+        text-decoration: underline;
+        color: #1e87f0;
+    }
+</style>
+
+<div class="uk-container uk-margin-top">
+    
+    <!-- Search form with filters -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h3 class="uk-card-title">Filter Cards</h3>
+        <form method="GET" action="{% url 'cards' %}">
+            <div class="uk-grid-small uk-child-width-1-5@m uk-child-width-1-2@s" uk-grid>
+                
+                <!-- Filter by name -->
+                <div>
+                    <label class="uk-form-label">Card Name</label>
+                    <input type="text" name="name" class="uk-input" placeholder="Search by name..." value="{{ filter_name|default:'' }}">
+                </div>
+                
+                <!-- Filter by set -->
+                <div>
+                    <label class="uk-form-label">Set</label>
+                    <select name="set" class="uk-select">
+                        <option value="">-- All --</option>
+                        {% for s in sets %}
+                        <option value="{{ s }}" {% if filter_set == s %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Filter by minimum price -->
+                <div>
+                    <label class="uk-form-label">Minimum Price (€)</label>
+                    <input type="number" name="price_min" class="uk-input" placeholder="E.g.: 0.50" step="0.01" min="0" value="{{ filter_price_min|default:'' }}">
+                </div>
+                
+                <!-- Filter by maximum price -->
+                <div>
+                    <label class="uk-form-label">Maximum Price (€)</label>
+                    <input type="number" name="price_max" class="uk-input" placeholder="E.g.: 100" step="0.01" min="0" value="{{ filter_price_max|default:'' }}">
+                </div>
+                
+                <!-- Filter by rarity -->
+                <div>
+                    <label class="uk-form-label">Rarity</label>
+                    <select name="rarity" class="uk-select">
+                        <option value="">-- All --</option>
+                        {% for r in rarities %}
+                        <option value="{{ r }}" {% if filter_rarity == r %}selected{% endif %}>{{ r }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="uk-margin-top">
+                <button type="submit" class="uk-button uk-button-primary">
+                    <span uk-icon="search"></span> Search
+                </button>
+                <a href="{% url 'cards' %}" class="uk-button uk-button-default">
+                    <span uk-icon="refresh"></span> Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Results -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-bottom">
+            <h3 class="uk-card-title uk-margin-remove">Results</h3>
+            <span class="uk-badge">{{ cards.paginator.count }} card{{ cards.paginator.count|pluralize:"s" }} found</span>
+        </div>
+        
+        {% if cards %}
+        <div class="uk-overflow-auto">
+            <table class="uk-table uk-table-striped uk-table-hover uk-table-small">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Number</th>
+                        <th>Set</th>
+                        <th>Rarity</th>
+                        <th class="uk-text-right">Price Trend (€)</th>
+                        <th class="uk-text-right">Available</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in cards %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'card_detail' card.id_card %}" class="card-link">
+                                <strong>{{ card.name }}</strong>
+                                {% if card.version %}
+                                    <span class="uk-text-meta">({{ card.version }})</span>
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td>
+                            {% if card.card_number %}
+                                #{{ card.card_number }}
+                            {% else %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="uk-label uk-label-primary">{{ card.set }}</span>
+                        </td>
+                        <td>{{ card.rarity }}</td>
+                        <td class="uk-text-right">
+                            {% if card.price_trend %}
+                            <span class="{% if card.price_trend >= 20 %}precio-alto{% elif card.price_trend >= 5 %}precio-medio{% else %}precio-bajo{% endif %}">
+                                {{ card.price_trend|floatformat:2 }} €
+                            </span>
+                            {% else %}
+                            <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="uk-text-right">{{ card.available_items }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if cards.has_other_pages %}
+        <ul class="uk-pagination uk-flex-center uk-margin-top">
+            {% if cards.has_previous %}
+                <li><a href="?page=1{% if filter_name %}&name={{ filter_name }}{% endif %}{% if filter_set %}&set={{ filter_set }}{% endif %}{% if filter_price_min %}&price_min={{ filter_price_min }}{% endif %}{% if filter_price_max %}&price_max={{ filter_price_max }}{% endif %}{% if filter_rarity %}&rarity={{ filter_rarity }}{% endif %}"><span uk-pagination-previous></span></a></li>
+                <li><a href="?page={{ cards.previous_page_number }}{% if filter_name %}&name={{ filter_name }}{% endif %}{% if filter_set %}&set={{ filter_set }}{% endif %}{% if filter_price_min %}&price_min={{ filter_price_min }}{% endif %}{% if filter_price_max %}&price_max={{ filter_price_max }}{% endif %}{% if filter_rarity %}&rarity={{ filter_rarity }}{% endif %}">Previous</a></li>
+            {% else %}
+                <li class="uk-disabled"><span><span uk-pagination-previous></span></span></li>
+            {% endif %}
+            
+            <li class="uk-active"><span>Page {{ cards.number }} of {{ cards.paginator.num_pages }}</span></li>
+            
+            {% if cards.has_next %}
+                <li><a href="?page={{ cards.next_page_number }}{% if filter_name %}&name={{ filter_name }}{% endif %}{% if filter_set %}&set={{ filter_set }}{% endif %}{% if filter_price_min %}&price_min={{ filter_price_min }}{% endif %}{% if filter_price_max %}&price_max={{ filter_price_max }}{% endif %}{% if filter_rarity %}&rarity={{ filter_rarity }}{% endif %}">Next</a></li>
+                <li><a href="?page={{ cards.paginator.num_pages }}{% if filter_name %}&name={{ filter_name }}{% endif %}{% if filter_set %}&set={{ filter_set }}{% endif %}{% if filter_price_min %}&price_min={{ filter_price_min }}{% endif %}{% if filter_price_max %}&price_max={{ filter_price_max }}{% endif %}{% if filter_rarity %}&rarity={{ filter_rarity }}{% endif %}"><span uk-pagination-next></span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span><span uk-pagination-next></span></span></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+        
+        {% else %}
+        <div class="uk-alert uk-alert-warning" uk-alert>
+            <p>No cards found with the specified filters.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+</div>
+{% endblock %}

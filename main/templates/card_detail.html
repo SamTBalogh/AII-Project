@@ -1,0 +1,180 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block titulo %}{{ card.name }}{% endblock %}
+
+{% block contenido %}
+<style>
+    .precio-alto {
+        color: #d32f2f;
+        font-weight: bold;
+    }
+    .precio-medio {
+        color: #f57c00;
+        font-weight: bold;
+    }
+    .precio-bajo {
+        color: #388e3c;
+        font-weight: bold;
+    }
+    .seller-link {
+        color: inherit;
+        text-decoration: none;
+    }
+    .seller-link:hover {
+        text-decoration: underline;
+        color: #1e87f0;
+    }
+    .vacation-badge {
+        background-color: #ffc107;
+        color: #333;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+    }
+</style>
+
+<div class="uk-container uk-margin-top">
+    
+    <!-- Navigation -->
+    <div class="uk-margin-bottom">
+        <a href="{% url 'cards' %}" class="uk-button uk-button-default uk-button-small">
+            <span uk-icon="arrow-left"></span> Back to Cards
+        </a>
+    </div>
+    
+    <!-- Card Info -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <div class="uk-grid-small" uk-grid>
+            <!-- Card Image -->
+            <div class="uk-width-1-4@m">
+                {% if card.image_url %}
+                <img src="{{ card.image_url }}" alt="{{ card.name }}" class="uk-width-1-1">
+                {% else %}
+                <div class="uk-placeholder uk-text-center" style="height: 300px;">
+                    <span uk-icon="icon: image; ratio: 3"></span>
+                    <p>No image available</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Card Details -->
+            <div class="uk-width-3-4@m">
+                <h2 class="uk-heading-small">
+                    {{ card.name }}
+                    {% if card.version %}
+                        <span class="uk-text-meta">({{ card.version }})</span>
+                    {% endif %}
+                </h2>
+                
+                <dl class="uk-description-list">
+                    <dt>Set</dt>
+                    <dd><span class="uk-label uk-label-primary">{{ card.set }}</span></dd>
+                    
+                    <dt>Card Number</dt>
+                    <dd>{{ card.card_number|default:"-" }}</dd>
+                    
+                    <dt>Rarity</dt>
+                    <dd>{{ card.rarity|default:"-" }}</dd>
+                    
+                    <dt>Available Items</dt>
+                    <dd>{{ card.available_items }}</dd>
+                </dl>
+                
+                <h3>Pricing</h3>
+                <div class="uk-grid-small uk-child-width-1-5@m uk-child-width-1-2@s" uk-grid>
+                    <div>
+                        <strong>Price From</strong><br>
+                        {% if card.price_from %}
+                            <span class="precio-bajo">{{ card.price_from|floatformat:2 }} €</span>
+                        {% else %}-{% endif %}
+                    </div>
+                    <div>
+                        <strong>Price Trend</strong><br>
+                        {% if card.price_trend %}
+                            <span class="{% if card.price_trend >= 20 %}precio-alto{% elif card.price_trend >= 5 %}precio-medio{% else %}precio-bajo{% endif %}">
+                                {{ card.price_trend|floatformat:2 }} €
+                            </span>
+                        {% else %}-{% endif %}
+                    </div>
+                    <div>
+                        <strong>Avg 30 Days</strong><br>
+                        {% if card.avg_30_days %}{{ card.avg_30_days|floatformat:2 }} €{% else %}-{% endif %}
+                    </div>
+                    <div>
+                        <strong>Avg 7 Days</strong><br>
+                        {% if card.avg_7_days %}{{ card.avg_7_days|floatformat:2 }} €{% else %}-{% endif %}
+                    </div>
+                    <div>
+                        <strong>Avg 1 Day</strong><br>
+                        {% if card.avg_1_day %}{{ card.avg_1_day|floatformat:2 }} €{% else %}-{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sellers offering this card -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-bottom">
+            <h3 class="uk-card-title uk-margin-remove">Sellers Offering This Card</h3>
+            <span class="uk-badge">{{ seller_cards|length }} offer{{ seller_cards|length|pluralize:"s" }}</span>
+        </div>
+        
+        {% if seller_cards %}
+        <div class="uk-overflow-auto">
+            <table class="uk-table uk-table-striped uk-table-hover uk-table-small">
+                <thead>
+                    <tr>
+                        <th>Seller</th>
+                        <th>Country</th>
+                        <th>Condition</th>
+                        <th>Language</th>
+                        <th class="uk-text-right">Price</th>
+                        <th class="uk-text-right">Quantity</th>
+                        <th class="uk-text-center">Shipping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sc in seller_cards %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'seller_detail' sc.seller.id_seller %}" class="seller-link">
+                                <strong>{{ sc.seller.name }}</strong>
+                            </a>
+                            {% if sc.seller.on_vacation %}
+                                <span class="vacation-badge">On Vacation</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ sc.seller.country }}</td>
+                        <td>{{ sc.condition }}</td>
+                        <td>{{ sc.language }}</td>
+                        <td class="uk-text-right">
+                            <span class="{% if sc.price >= 20 %}precio-alto{% elif sc.price >= 5 %}precio-medio{% else %}precio-bajo{% endif %}">
+                                {{ sc.price|floatformat:2 }} {{ sc.currency }}
+                            </span>
+                        </td>
+                        <td class="uk-text-right">{{ sc.quantity }}</td>
+                        <td class="uk-text-center">
+                            {% if sc.seller.on_vacation %}
+                                <span class="uk-text-warning">Vacation</span>
+                            {% elif sc.seller.shipping_days is not None %}
+                                {{ sc.seller.shipping_days }} days
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="uk-alert uk-alert-warning" uk-alert>
+            <p>No sellers currently offer this card.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+</div>
+{% endblock %}

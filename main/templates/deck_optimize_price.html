@@ -1,0 +1,224 @@
+{% extends "master.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block titulo %}{{ deck.name }} - Optimize by Price{% endblock %}
+
+{% block contenido %}
+<style>
+    .mana-icon {
+        width: 18px;
+        height: 18px;
+        vertical-align: middle;
+        margin-right: 2px;
+    }
+    .role-section {
+        margin-bottom: 30px;
+    }
+    .card-row:hover {
+        background-color: #f8f8f8;
+    }
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .summary-card .uk-card-title {
+        color: white;
+    }
+    .price-highlight {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    .shipping-estimate {
+        background-color: #f8f9fa;
+        border-left: 4px solid #1e87f0;
+    }
+</style>
+
+<div class="uk-container uk-margin-top">
+    
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb">
+        <li><a href="/">Home</a></li>
+        <li><a href="/decks/">Decks</a></li>
+        <li><a href="{% url 'deck_detail' deck.id_deck %}">{{ deck.name }}</a></li>
+        <li><span>Optimize by Price</span></li>
+    </ul>
+    
+    <!-- Header -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h1 class="uk-card-title">
+            <span uk-icon="icon: cart; ratio: 1.5"></span>
+            Price Optimization - {{ deck.name }}
+        </h1>
+        <p class="uk-text-meta">
+            This analysis finds the best-priced sellers for each card in the deck.
+            If a seller doesn't have enough copies, additional sellers are searched.
+        </p>
+    </div>
+    
+    <!-- Summary -->
+    <div class="uk-card summary-card uk-card-body uk-margin-bottom">
+        <div class="uk-grid-small uk-child-width-1-4@m uk-child-width-1-2@s" uk-grid>
+            <div>
+                <div class="uk-text-center">
+                    <span class="price-highlight">€{{ total_cards_price|floatformat:2 }}</span>
+                    <p class="uk-margin-remove">Cards Price</p>
+                </div>
+            </div>
+            <div>
+                <div class="uk-text-center">
+                    <span class="price-highlight">€{{ total_shipping|floatformat:2 }}</span>
+                    <p class="uk-margin-remove">Estimated Shipping</p>
+                </div>
+            </div>
+            <div>
+                <div class="uk-text-center">
+                    <span class="price-highlight">€{{ total_price|floatformat:2 }}</span>
+                    <p class="uk-margin-remove">Estimated Total</p>
+                </div>
+            </div>
+            <div>
+                <div class="uk-text-center">
+                    <span class="price-highlight">{{ num_sellers }}</span>
+                    <p class="uk-margin-remove">Sellers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if cards_not_found %}
+    <!-- Cards not found warning -->
+    <div class="uk-alert uk-alert-warning" uk-alert>
+        <a class="uk-alert-close" uk-close></a>
+        <h3><span uk-icon="warning"></span> Cards without available sellers</h3>
+        <ul>
+            {% for item in cards_not_found %}
+            <li>
+                {{ item.quantity }}x <strong>{{ item.card.name }}</strong>
+                {% if item.card.version %}({{ item.card.version }}){% endif %}
+                - {{ item.role }}
+                {% if item.partial %}<span class="uk-text-danger">(partially covered)</span>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <!-- Sellers Summary -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h3 class="uk-card-title"><span uk-icon="users"></span> Summary by Seller</h3>
+        <p class="uk-text-meta">Estimated shipping costs from each country to Spain</p>
+        
+        <table class="uk-table uk-table-striped uk-table-small">
+            <thead>
+                <tr>
+                    <th>Seller</th>
+                    <th>Country</th>
+                    <th class="uk-text-right">Cards</th>
+                    <th class="uk-text-right">Subtotal</th>
+                    <th class="uk-text-right">Est. Shipping</th>
+                    <th class="uk-text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for seller_data in sellers_summary %}
+                <tr>
+                    <td>
+                        <a href="{% url 'seller_detail' seller_data.seller.id_seller %}">
+                            <strong>{{ seller_data.seller.name }}</strong>
+                        </a>
+                    </td>
+                    <td>{{ seller_data.seller.country }}</td>
+                    <td class="uk-text-right">{{ seller_data.cards_count }}</td>
+                    <td class="uk-text-right">€{{ seller_data.subtotal|floatformat:2 }}</td>
+                    <td class="uk-text-right">€{{ seller_data.shipping|floatformat:2 }}</td>
+                    <td class="uk-text-right uk-text-bold">€{{ seller_data.subtotal|add_float:seller_data.shipping|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="uk-text-bold">
+                    <td colspan="3">TOTAL</td>
+                    <td class="uk-text-right">€{{ total_cards_price|floatformat:2 }}</td>
+                    <td class="uk-text-right">€{{ total_shipping|floatformat:2 }}</td>
+                    <td class="uk-text-right">€{{ total_price|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    
+    <!-- Purchase Plan -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title"><span uk-icon="list"></span> Detailed Purchase Plan</h3>
+        
+        <div class="uk-overflow-auto">
+            <table class="uk-table uk-table-striped uk-table-hover uk-table-small">
+                <thead>
+                    <tr>
+                        <th>Qty</th>
+                        <th>Card</th>
+                        <th>Role</th>
+                        <th>Seller</th>
+                        <th>Country</th>
+                        <th>Condition</th>
+                        <th class="uk-text-right">Unit Price</th>
+                        <th class="uk-text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in purchase_plan %}
+                    <tr class="card-row">
+                        <td class="uk-text-center uk-text-bold">{{ item.quantity }}x</td>
+                        <td>
+                            <a href="{% url 'card_detail' item.card.id_card %}" class="uk-link-reset">
+                                <strong>{{ item.card.name }}</strong>
+                                {% if item.card.version %}
+                                    <span class="uk-text-meta">({{ item.card.version }})</span>
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="uk-badge {% if item.role == 'Sideboard' %}uk-badge-warning{% endif %}">
+                                {{ item.role }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'seller_detail' item.seller.id_seller %}">
+                                {{ item.seller.name }}
+                            </a>
+                        </td>
+                        <td>{{ item.seller.country }}</td>
+                        <td>{{ item.condition }}</td>
+                        <td class="uk-text-right">€{{ item.unit_price|floatformat:2 }}</td>
+                        <td class="uk-text-right uk-text-bold">€{{ item.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Shipping Info -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-top shipping-estimate">
+        <h4><span uk-icon="info"></span> About Shipping Estimation</h4>
+        <p class="uk-text-small uk-margin-remove">
+            Shipping costs are estimates based on typical postal rates from each country to Spain.
+            Actual cost may vary depending on the shipping method chosen, total weight, and each seller's policies.
+            Spain has the cheapest shipping (~€0.70-7.50), followed by Portugal and France (~€1.20-3.50),
+            while countries outside the EU may have significantly higher costs.
+        </p>
+    </div>
+    
+    <div class="uk-margin-top uk-flex uk-flex-between">
+        <a href="{% url 'deck_detail' deck.id_deck %}" class="uk-button uk-button-default">
+            <span uk-icon="arrow-left"></span> Back to Deck
+        </a>
+        <a href="{% url 'deck_optimize_shipping' deck.id_deck %}" class="uk-button uk-button-secondary">
+            <span uk-icon="location"></span> View Shipping Optimization
+        </a>
+    </div>
+    
+</div>
+
+{% endblock %}

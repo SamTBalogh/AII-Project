@@ -1,0 +1,48 @@
+{% extends 'master.html' %}
+
+{% block titulo %} 
+	Database Populated
+{% endblock %}   
+
+{% block contenido %} 
+    <div class="uk-alert-success" uk-alert>
+        <p><strong>Database populated successfully!</strong></p>
+    </div>
+    
+    <div class="uk-grid-small uk-child-width-1-5@m uk-child-width-1-2@s uk-text-center" uk-grid>
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title">{{ cards }}</h3>
+                <p>Cards</p>
+            </div>
+        </div>
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title">{{ sellers }}</h3>
+                <p>Sellers</p>
+            </div>
+        </div>
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title">{{ decks }}</h3>
+                <p>Decks</p>
+            </div>
+        </div>
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title">{{ users }}</h3>
+                <p>Users</p>
+            </div>
+        </div>
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title">{{ ratings }}</h3>
+                <p>Ratings</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="uk-margin-top uk-text-center">
+        <a href="/" class="uk-button uk-button-primary">Back to Home</a>
+    </div>
+{% endblock %}

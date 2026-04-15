@@ -1,0 +1,69 @@
+{% load static %} 
+
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+	<meta charset='utf-8'>
+		<link rel="stylesheet" href="{% static 'css/uikit.min.css' %}" />
+        <script src="{% static 'js/jquery.min.js' %}"></script>
+        <script src="{% static 'js/uikit.min.js' %}"></script>
+  </head>
+  <body>
+  
+
+	<h1>DECK RECOMMENDATION SYSTEM</h1>
+    <nav class="uk-navbar-container" uk-navbar>
+    <div class="uk-navbar-left">
+
+        <ul class="uk-navbar-nav">
+            <li class="uk-active"><a href="/">Home</a>
+            <div class="uk-navbar-dropdown">
+                    <ul class="uk-nav uk-navbar-dropdown-nav">
+                        <li><a href="/populate/">Populate Database</a></li>
+                        <li><a href="/loadWhooshIndex/">Load Whoosh Index</a></li>
+                        <li><a href="/loadRS/">Load Recommendation System</a></li>
+                    </ul>
+                </div>
+            </li>
+           <li><a href="#">Search &amp; Analysis</a>
+                <div class="uk-navbar-dropdown">
+                    <ul class="uk-nav uk-navbar-dropdown-nav">
+						<li><a href="/decks/">Standard Format Decks</a></li>
+                        <li><a href="/cards/">Cards</a></li>
+						<li><a href="/sellers/">Sellers</a></li>
+						<li><a href="/recomendedDecks/">Recommended Collaborative Decks</a></li>
+                        <li><a href="/recomendedDecksContent/">Recommended Content-Based Decks</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li><a href="#">Data Extraction</a>
+                <div class="uk-navbar-dropdown">
+                    <ul class="uk-nav uk-navbar-dropdown-nav">
+                        <li><a href="/data/generate-set-urls/">Generate Set URLs</a></li>
+                        <li><a href="/data/extract-card-links/">Extract Card Links</a></li>
+                        <li class="uk-nav-divider"></li>
+                        <li><a href="/data/rename-card-files/">Rename Card Files</a></li>
+                        <li><a href="/data/extract-card-data/">Extract Card Data</a></li>
+                        <li class="uk-nav-divider"></li>
+                        <li><a href="/data/extract-seller-card-data/">Extract Seller Card Data</a></li>
+                        <li><a href="/data/extract-seller-links/">Extract Seller Links</a></li>
+                        <li><a href="/data/extract-seller-data/">Extract Seller Data</a></li>
+                        <li class="uk-nav-divider"></li>
+                        <li><a href="/data/generate-ratings/">Generate User Ratings</a></li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+
+    </div>
+</nav>
+	    
+
+		<hr>
+ 		
+ 		<h1 >{% block titulo %} {% endblock %}</h1>
+
+		{% block contenido %} {% endblock %}
+  </body>
+</html>

@@ -1,0 +1,266 @@
+{% extends "master.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block titulo %}{{ deck.name }} - Deck Detail{% endblock %}
+
+{% block contenido %}
+<style>
+    .mana-icon {
+        width: 18px;
+        height: 18px;
+        vertical-align: middle;
+        margin-right: 2px;
+    }
+    .role-section {
+        margin-bottom: 30px;
+    }
+    .card-row:hover {
+        background-color: #f8f8f8;
+    }
+</style>
+
+<div class="uk-container uk-margin-top">
+    
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb">
+        <li><a href="/">Home</a></li>
+        <li><a href="/decks/">Decks</a></li>
+        <li><span>{{ deck.name }}</span></li>
+    </ul>
+    
+    <!-- Deck Header -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h1 class="uk-card-title">{{ deck.name }}</h1>
+        
+        {% if deck.alternative_name and deck.alternative_name != deck.name %}
+            <p class="uk-text-meta">Also known as: {{ deck.alternative_name }}</p>
+        {% endif %}
+        
+        <div class="uk-grid-small uk-child-width-auto uk-margin-top" uk-grid>
+            <div>
+                <span class="uk-label 
+                    {% if deck.archetype == 'Aggro' %}uk-label-danger
+                    {% elif deck.archetype == 'Control' %}uk-label-primary
+                    {% elif deck.archetype == 'Midrange' %}uk-label-success
+                    {% elif deck.archetype == 'Combo' %}uk-label-warning
+                    {% elif deck.archetype == 'Tempo' %}" style="background-color: #9c27b0; color: #fff;"
+                    {% else %}uk-label-default{% endif %}">
+                    {{ deck.archetype }}
+                </span>
+            </div>
+            <div>
+                <span class="uk-badge">{{ deck.color_identity }}</span>
+            </div>
+            <div>
+                {% if 'W' in deck.colors_used %}<img src="{% static 'img/W.svg' %}" alt="White" class="mana-icon" title="White">{% endif %}
+                {% if 'U' in deck.colors_used %}<img src="{% static 'img/U.svg' %}" alt="Blue" class="mana-icon" title="Blue">{% endif %}
+                {% if 'B' in deck.colors_used %}<img src="{% static 'img/B.svg' %}" alt="Black" class="mana-icon" title="Black">{% endif %}
+                {% if 'R' in deck.colors_used %}<img src="{% static 'img/R.svg' %}" alt="Red" class="mana-icon" title="Red">{% endif %}
+                {% if 'G' in deck.colors_used %}<img src="{% static 'img/G.svg' %}" alt="Green" class="mana-icon" title="Green">{% endif %}
+            </div>
+            {% if deck.meta_percentage > 0 %}
+            <div>
+                <span class="uk-text-bold">Meta: {{ deck.meta_percentage }}%</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Deck Statistics -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h3 class="uk-card-title">Statistics</h3>
+        <div class="uk-grid-small uk-child-width-1-4@m uk-child-width-1-2@s" uk-grid>
+            <div>
+                <div class="uk-text-center">
+                    <span class="uk-text-large uk-text-bold uk-text-primary">{{ total_cards }}</span>
+                    <p class="uk-text-meta uk-margin-remove">Total Cards</p>
+                </div>
+            </div>
+            <div>
+                <div class="uk-text-center">
+                    <span class="uk-text-large uk-text-bold uk-text-success">€{{ total_price|floatformat:2 }}</span>
+                    <p class="uk-text-meta uk-margin-remove">Estimated Price</p>
+                </div>
+            </div>
+            <div>
+                <div class="uk-text-center">
+                    <span class="uk-text-large uk-text-bold uk-text-warning">€{{ avg_price|floatformat:2 }}</span>
+                    <p class="uk-text-meta uk-margin-remove">Average Price/Card</p>
+                </div>
+            </div>
+            <div>
+                <div class="uk-text-center">
+                    <span class="uk-text-large uk-text-bold">{{ deck_cards|length }}</span>
+                    <p class="uk-text-meta uk-margin-remove">Unique Cards</p>
+                </div>
+            </div>
+        </div>
+        
+        {% if card_count_by_role %}
+        <hr class="uk-margin-top">
+        <h4>Distribution by Type</h4>
+        <div class="uk-grid-small uk-child-width-auto" uk-grid>
+            {% for role, count in card_count_by_role.items %}
+            <div>
+                <span class="uk-badge">{{ role }}: {{ count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Deck Cards -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">Card List</h3>
+        
+        {% regroup deck_cards by role as cards_by_role %}
+        
+        <!-- Main deck cards (everything except Sideboard) -->
+        {% for role_group in cards_by_role %}
+        {% if role_group.grouper != 'Sideboard' %}
+        <div class="role-section">
+            <h4 class="uk-heading-line"><span>{{ role_group.grouper }} ({{ role_group.list|length }})</span></h4>
+            
+            <table class="uk-table uk-table-small uk-table-hover">
+                <thead>
+                    <tr>
+                        <th width="60">Qty</th>
+                        <th>Name</th>
+                        <th>Set</th>
+                        <th>Rarity</th>
+                        <th class="uk-text-right">Unit Price</th>
+                        <th class="uk-text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for deck_card in role_group.list %}
+                    <tr class="card-row">
+                        <td class="uk-text-center uk-text-bold">{{ deck_card.quantity }}x</td>
+                        <td>
+                            <a href="{% url 'card_detail' deck_card.card.id_card %}" class="uk-link-reset">
+                                <strong>{{ deck_card.card.name }}</strong>
+                                {% if deck_card.card.version %}
+                                    <span class="uk-text-meta">({{ deck_card.card.version }})</span>
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td>{{ deck_card.card.set }}</td>
+                        <td>
+                            {% if deck_card.card.rarity %}
+                                <span class="uk-badge 
+                                    {% if 'Mythic' in deck_card.card.rarity %}uk-badge-danger
+                                    {% elif 'Rare' in deck_card.card.rarity %}uk-badge-warning
+                                    {% elif 'Uncommon' in deck_card.card.rarity %}uk-badge-success
+                                    {% else %}uk-badge-default{% endif %}">
+                                    {{ deck_card.card.rarity }}
+                                </span>
+                            {% else %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="uk-text-right">
+                            {% if deck_card.card.price_from %}
+                                €{{ deck_card.card.price_from|floatformat:2 }}
+                            {% else %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="uk-text-right uk-text-bold">
+                            {% if deck_card.card.price_from %}
+                                €{{ deck_card.card.price_from|multiply:deck_card.quantity|floatformat:2 }}
+                            {% else %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% endfor %}
+        
+        <!-- Sideboard cards (at the end) -->
+        {% for role_group in cards_by_role %}
+        {% if role_group.grouper == 'Sideboard' %}
+        <div class="role-section">
+            <h4 class="uk-heading-line"><span>{{ role_group.grouper }} ({{ role_group.list|length }})</span></h4>
+            
+            <table class="uk-table uk-table-small uk-table-hover">
+                <thead>
+                    <tr>
+                        <th width="60">Qty</th>
+                        <th>Name</th>
+                        <th>Set</th>
+                        <th>Rarity</th>
+                        <th class="uk-text-right">Unit Price</th>
+                        <th class="uk-text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for deck_card in role_group.list %}
+                    <tr class="card-row">
+                        <td class="uk-text-center uk-text-bold">{{ deck_card.quantity }}x</td>
+                        <td>
+                            <a href="{% url 'card_detail' deck_card.card.id_card %}" class="uk-link-reset">
+                                <strong>{{ deck_card.card.name }}</strong>
+                                {% if deck_card.card.version %}
+                                    <span class="uk-text-meta">({{ deck_card.card.version }})</span>
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td>{{ deck_card.card.set }}</td>
+                        <td>
+                            {% if deck_card.card.rarity %}
+                                <span class="uk-badge 
+                                    {% if 'Mythic' in deck_card.card.rarity %}uk-badge-danger
+                                    {% elif 'Rare' in deck_card.card.rarity %}uk-badge-warning
+                                    {% elif 'Uncommon' in deck_card.card.rarity %}uk-badge-success
+                                    {% else %}uk-badge-default{% endif %}">
+                                    {{ deck_card.card.rarity }}
+                                </span>
+                            {% else %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="uk-text-right">
+                            {% if deck_card.card.price_from %}
+                                €{{ deck_card.card.price_from|floatformat:2 }}
+                            {% else %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="uk-text-right uk-text-bold">
+                            {% if deck_card.card.price_from %}
+                                €{{ deck_card.card.price_from|multiply:deck_card.quantity|floatformat:2 }}
+                            {% else %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    
+    <div class="uk-margin-top uk-flex uk-flex-between">
+        <a href="/decks/" class="uk-button uk-button-default">
+            <span uk-icon="arrow-left"></span> Back to Decks
+        </a>
+        <div>
+            <a href="{% url 'deck_optimize_price' deck.id_deck %}" class="uk-button uk-button-primary">
+                <span uk-icon="cart"></span> Optimize by Price
+            </a>
+            <a href="{% url 'deck_optimize_shipping' deck.id_deck %}" class="uk-button uk-button-secondary">
+                <span uk-icon="location"></span> Optimize by Shipping
+            </a>
+        </div>
+    </div>
+    
+</div>
+
+{% endblock %}

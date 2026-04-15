@@ -1,0 +1,244 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block titulo %}Standard Metagame Decks{% endblock %}
+
+{% block contenido %}
+<style>
+    .mana-icon {
+        width: 18px;
+        height: 18px;
+        vertical-align: middle;
+        margin-right: 2px;
+    }
+    .uk-label-gray {
+        background-color: #999;
+        color: #fff;
+    }
+    .uk-label-purple {
+        background-color: #9c27b0;
+        color: #fff;
+    }
+    /* Styles for color selector with icons */
+    .color-checkbox {
+        display: none;
+    }
+    .color-option {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border: 2px solid #e5e5e5;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+    }
+    .color-option:hover {
+        border-color: #1e87f0;
+        background-color: #f8f8f8;
+    }
+    .color-checkbox:checked + .color-option {
+        border-color: #1e87f0;
+        background-color: #e6f2ff;
+    }
+    .color-option img {
+        width: 20px;
+        height: 20px;
+        margin-right: 6px;
+    }
+    .color-filter-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 5px;
+    }
+</style>
+<div class="uk-container uk-margin-top">
+    
+    <!-- Search form with filters -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h3 class="uk-card-title">Filter Decks</h3>
+        <form method="GET" action="/decks/">
+            <div class="uk-grid-small uk-child-width-1-5@m uk-child-width-1-2@s" uk-grid>
+                
+                <!-- Filter by name -->
+                <div>
+                    <label class="uk-form-label" for="nombre">Deck Name</label>
+                    <input class="uk-input" type="text" id="nombre" name="nombre" 
+                           value="{{ filtro_nombre }}" placeholder="Search by name...">
+                </div>
+                
+                <!-- Filter by color identity -->
+                <div>
+                    <label class="uk-form-label" for="identidad_color">Color Identity</label>
+                    <select class="uk-select" id="identidad_color" name="identidad_color">
+                        <option value="">-- All --</option>
+                        {% for identidad in identidades_color %}
+                            <option value="{{ identidad }}" {% if filtro_identidad == identidad %}selected{% endif %}>
+                                {{ identidad }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Filter by archetype -->
+                <div>
+                    <label class="uk-form-label" for="arquetipo">Archetype</label>
+                    <select class="uk-select" id="arquetipo" name="arquetipo">
+                        <option value="">-- All --</option>
+                        {% for arq in arquetipos %}
+                            <option value="{{ arq }}" {% if filtro_arquetipo == arq %}selected{% endif %}>
+                                {{ arq }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Filter by meta percentage -->
+                <div>
+                    <label class="uk-form-label" for="meta_min">Minimum Meta %</label>
+                    <input class="uk-input" type="number" id="meta_min" name="meta_min" 
+                           value="{{ filtro_meta_min }}" placeholder="E.g.: 5" step="0.1" min="0" max="100">
+                </div>
+                
+                <!-- Filter by color (with SVG icons - multiple selection) -->
+                <div>
+                    <label class="uk-form-label">Colors</label>
+                    <div class="color-filter-container">
+                        <input type="checkbox" name="color" value="W" id="color_w" class="color-checkbox" {% if 'W' in filtro_colores %}checked{% endif %}>
+                        <label for="color_w" class="color-option">
+                            <img src="{% static 'img/W.svg' %}" alt="White"> White
+                        </label>
+                        
+                        <input type="checkbox" name="color" value="U" id="color_u" class="color-checkbox" {% if 'U' in filtro_colores %}checked{% endif %}>
+                        <label for="color_u" class="color-option">
+                            <img src="{% static 'img/U.svg' %}" alt="Blue"> Blue
+                        </label>
+                        
+                        <input type="checkbox" name="color" value="B" id="color_b" class="color-checkbox" {% if 'B' in filtro_colores %}checked{% endif %}>
+                        <label for="color_b" class="color-option">
+                            <img src="{% static 'img/B.svg' %}" alt="Black"> Black
+                        </label>
+                        
+                        <input type="checkbox" name="color" value="R" id="color_r" class="color-checkbox" {% if 'R' in filtro_colores %}checked{% endif %}>
+                        <label for="color_r" class="color-option">
+                            <img src="{% static 'img/R.svg' %}" alt="Red"> Red
+                        </label>
+                        
+                        <input type="checkbox" name="color" value="G" id="color_g" class="color-checkbox" {% if 'G' in filtro_colores %}checked{% endif %}>
+                        <label for="color_g" class="color-option">
+                            <img src="{% static 'img/G.svg' %}" alt="Green"> Green
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="uk-margin-top">
+                <button type="submit" class="uk-button uk-button-primary">
+                    <span uk-icon="search"></span> Search
+                </button>
+                <a href="/decks/" class="uk-button uk-button-default">
+                    <span uk-icon="refresh"></span> Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Results -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-bottom">
+            <h3 class="uk-card-title uk-margin-remove">Results</h3>
+            <span class="uk-badge">{{ mazos.paginator.count }} deck{{ mazos.paginator.count|pluralize:"s" }} found</span>
+        </div>
+        
+        {% if mazos %}
+        <div class="uk-overflow-auto">
+            <table class="uk-table uk-table-striped uk-table-hover uk-table-small">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Alternative Name</th>
+                        <th>Archetype</th>
+                        <th>Color Identity</th>
+                        <th>Colors Used</th>
+                        <th class="uk-text-right">Meta %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mazo in mazos %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'deck_detail' mazo.id_deck %}">
+                                <strong>{{ mazo.name }}</strong>
+                            </a>
+                        </td>
+                        <td>
+                            {% if mazo.alternative_name and mazo.alternative_name != mazo.name %}
+                                {{ mazo.alternative_name }}
+                            {% else %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="uk-label 
+                                {% if mazo.archetype == 'Aggro' %}uk-label-danger
+                                {% elif mazo.archetype == 'Control' %}uk-label-primary
+                                {% elif mazo.archetype == 'Midrange' %}uk-label-success
+                                {% elif mazo.archetype == 'Combo' %}uk-label-warning
+                                {% elif mazo.archetype == 'Tempo' %}uk-label-purple
+                                {% else %}uk-label-gray{% endif %}">
+                                {{ mazo.archetype }}
+                            </span>
+                        </td>
+                        <td>{{ mazo.color_identity }}</td>
+                        <td>
+                            {% if 'W' in mazo.colors_used %}<img src="{% static 'img/W.svg' %}" alt="White" class="mana-icon" title="White">{% endif %}
+                            {% if 'U' in mazo.colors_used %}<img src="{% static 'img/U.svg' %}" alt="Blue" class="mana-icon" title="Blue">{% endif %}
+                            {% if 'B' in mazo.colors_used %}<img src="{% static 'img/B.svg' %}" alt="Black" class="mana-icon" title="Black">{% endif %}
+                            {% if 'R' in mazo.colors_used %}<img src="{% static 'img/R.svg' %}" alt="Red" class="mana-icon" title="Red">{% endif %}
+                            {% if 'G' in mazo.colors_used %}<img src="{% static 'img/G.svg' %}" alt="Green" class="mana-icon" title="Green">{% endif %}
+                            {% if not mazo.colors_used %}
+                                <span class="uk-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="uk-text-right">
+                            <span class="uk-text-bold {% if mazo.meta_percentage >= 10 %}uk-text-success{% elif mazo.meta_percentage >= 5 %}uk-text-warning{% else %}uk-text-muted{% endif %}">
+                                {{ mazo.meta_percentage }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if mazos.has_other_pages %}
+        <ul class="uk-pagination uk-flex-center uk-margin-top">
+            {% if mazos.has_previous %}
+                <li><a href="?page=1{% if filtro_nombre %}&nombre={{ filtro_nombre }}{% endif %}{% if filtro_identidad %}&identidad_color={{ filtro_identidad }}{% endif %}{% if filtro_arquetipo %}&arquetipo={{ filtro_arquetipo }}{% endif %}{% if filtro_meta_min %}&meta_min={{ filtro_meta_min }}{% endif %}{% for color in filtro_colores %}&color={{ color }}{% endfor %}"><span uk-pagination-previous></span></a></li>
+                <li><a href="?page={{ mazos.previous_page_number }}{% if filtro_nombre %}&nombre={{ filtro_nombre }}{% endif %}{% if filtro_identidad %}&identidad_color={{ filtro_identidad }}{% endif %}{% if filtro_arquetipo %}&arquetipo={{ filtro_arquetipo }}{% endif %}{% if filtro_meta_min %}&meta_min={{ filtro_meta_min }}{% endif %}{% for color in filtro_colores %}&color={{ color }}{% endfor %}">Previous</a></li>
+            {% else %}
+                <li class="uk-disabled"><span><span uk-pagination-previous></span></span></li>
+            {% endif %}
+            
+            <li class="uk-active"><span>Page {{ mazos.number }} of {{ mazos.paginator.num_pages }}</span></li>
+            
+            {% if mazos.has_next %}
+                <li><a href="?page={{ mazos.next_page_number }}{% if filtro_nombre %}&nombre={{ filtro_nombre }}{% endif %}{% if filtro_identidad %}&identidad_color={{ filtro_identidad }}{% endif %}{% if filtro_arquetipo %}&arquetipo={{ filtro_arquetipo }}{% endif %}{% if filtro_meta_min %}&meta_min={{ filtro_meta_min }}{% endif %}{% for color in filtro_colores %}&color={{ color }}{% endfor %}">Next</a></li>
+                <li><a href="?page={{ mazos.paginator.num_pages }}{% if filtro_nombre %}&nombre={{ filtro_nombre }}{% endif %}{% if filtro_identidad %}&identidad_color={{ filtro_identidad }}{% endif %}{% if filtro_arquetipo %}&arquetipo={{ filtro_arquetipo }}{% endif %}{% if filtro_meta_min %}&meta_min={{ filtro_meta_min }}{% endif %}{% for color in filtro_colores %}&color={{ color }}{% endfor %}"><span uk-pagination-next></span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span><span uk-pagination-next></span></span></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+        
+        {% else %}
+        <div class="uk-alert uk-alert-warning" uk-alert>
+            <p>No decks found with the specified filters.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+</div>
+{% endblock %}

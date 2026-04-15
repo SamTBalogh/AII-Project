@@ -1,0 +1,12 @@
+{% extends 'master.html' %}
+
+{% block titulo %} 
+	Populate Database
+{% endblock %}   
+
+{% block contenido %} 
+    	<p>Click the button to populate the database with decks.</p>
+    	<form method="post" action=''>{% csrf_token %}
+    		<p><input type='submit' value='Populate Database' class='uk-button uk-button-primary'></p>	
+    	</form>
+{% endblock %}

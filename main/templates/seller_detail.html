@@ -1,0 +1,209 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block titulo %}{{ seller.name }}{% endblock %}
+
+{% block contenido %}
+<style>
+    .precio-alto {
+        color: #d32f2f;
+        font-weight: bold;
+    }
+    .precio-medio {
+        color: #f57c00;
+        font-weight: bold;
+    }
+    .precio-bajo {
+        color: #388e3c;
+        font-weight: bold;
+    }
+    .card-link {
+        color: inherit;
+        text-decoration: none;
+    }
+    .card-link:hover {
+        text-decoration: underline;
+        color: #1e87f0;
+    }
+    .vacation-badge {
+        background-color: #ffc107;
+        color: #333;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+    }
+    .rating-outstanding {
+        color: #2e7d32;
+        font-weight: bold;
+    }
+    .rating-verygood {
+        color: #558b2f;
+    }
+    .rating-good {
+        color: #f57c00;
+    }
+    .approval-very-good {
+        background-color: #c8e6c9;
+        color: #2e7d32;
+    }
+    .approval-good {
+        background-color: #dcedc8;
+        color: #558b2f;
+    }
+    .approval-neutral {
+        background-color: #fff9c4;
+        color: #f57c00;
+    }
+    .approval-bad {
+        background-color: #ffcdd2;
+        color: #d32f2f;
+    }
+</style>
+
+<div class="uk-container uk-margin-top">
+    
+    <!-- Navigation -->
+    <div class="uk-margin-bottom">
+        <a href="{% url 'sellers' %}" class="uk-button uk-button-default uk-button-small">
+            <span uk-icon="arrow-left"></span> Back to Sellers
+        </a>
+    </div>
+    
+    <!-- Seller Info -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h2 class="uk-heading-small">
+            {{ seller.name }}
+            {% if seller.shipping_days is None %}
+                <span class="vacation-badge">On Vacation</span>
+            {% endif %}
+        </h2>
+        
+        {% if seller.real_name %}
+        <p class="uk-text-muted">{{ seller.real_name }}</p>
+        {% endif %}
+        
+        <div class="uk-grid-small uk-child-width-1-3@m" uk-grid>
+            <!-- Basic Info -->
+            <div>
+                <h4>Seller Information</h4>
+                <dl class="uk-description-list">
+                    <dt>Country</dt>
+                    <dd>{{ seller.country }}</dd>
+                    
+                    <dt>Seller Type</dt>
+                    <dd>{{ seller.seller_type }}</dd>
+                    
+                    <dt>Rating</dt>
+                    <dd>
+                        <span class="{% if 'Outstanding' in seller.rating %}rating-outstanding{% elif 'Very' in seller.rating %}rating-verygood{% else %}rating-good{% endif %}">
+                            {{ seller.rating|default:"-" }}
+                        </span>
+                    </dd>
+                    
+                    <dt>Sales Count</dt>
+                    <dd>{{ seller.sales_count }}</dd>
+                    
+                    <dt>Available Items</dt>
+                    <dd>{{ seller.available_items }}</dd>
+                    
+                    <dt>Shipping Days</dt>
+                    <dd>
+                        {% if seller.shipping_days is None %}
+                            <span class="uk-text-warning">Currently on vacation</span>
+                        {% elif seller.shipping_days is not None %}
+                            {{ seller.shipping_days }} days
+                        {% else %}
+                            -
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+            
+            <!-- Approval Ratings -->
+            <div>
+                <h4>Approval Ratings</h4>
+                <div class="uk-grid-small uk-child-width-1-2" uk-grid>
+                    <div>
+                        <span class="uk-label approval-very-good">Very Good</span>
+                        <strong>{{ seller.approval_very_good|default:"-" }}</strong>
+                    </div>
+                    <div>
+                        <span class="uk-label approval-good">Good</span>
+                        <strong>{{ seller.approval_good|default:"-" }}</strong>
+                    </div>
+                    <div>
+                        <span class="uk-label approval-neutral">Neutral</span>
+                        <strong>{{ seller.approval_neutral|default:"-" }}</strong>
+                    </div>
+                    <div>
+                        <span class="uk-label approval-bad">Bad</span>
+                        <strong>{{ seller.approval_bad|default:"-" }}</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Address -->
+            <div>
+                <h4>Address</h4>
+                <address>
+                    {% if seller.street_address %}{{ seller.street_address }}<br>{% endif %}
+                    {% if seller.postal_code %}{{ seller.postal_code }} {% endif %}{{ seller.city|default:"" }}<br>
+                    {{ seller.country }}
+                </address>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cards offered by this seller -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-bottom">
+            <h3 class="uk-card-title uk-margin-remove">Cards Offered by This Seller</h3>
+            <span class="uk-badge">{{ seller_cards|length }} card{{ seller_cards|length|pluralize:"s" }}</span>
+        </div>
+        
+        {% if seller_cards %}
+        <div class="uk-overflow-auto">
+            <table class="uk-table uk-table-striped uk-table-hover uk-table-small">
+                <thead>
+                    <tr>
+                        <th>Card Name</th>
+                        <th>Expansion</th>
+                        <th>Condition</th>
+                        <th>Language</th>
+                        <th class="uk-text-right">Price</th>
+                        <th class="uk-text-right">Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sc in seller_cards %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'card_detail' sc.card.id_card %}" class="card-link">
+                                <strong>{{ sc.card.name }}</strong>
+                            </a>
+                        </td>
+                        <td>
+                            <span class="uk-label uk-label-primary">{{ sc.card.set }}</span>
+                        </td>
+                        <td>{{ sc.condition }}</td>
+                        <td>{{ sc.language }}</td>
+                        <td class="uk-text-right">
+                            <span class="{% if sc.price >= 20 %}precio-alto{% elif sc.price >= 5 %}precio-medio{% else %}precio-bajo{% endif %}">
+                                {{ sc.price|floatformat:2 }} {{ sc.currency }}
+                            </span>
+                        </td>
+                        <td class="uk-text-right">{{ sc.quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="uk-alert uk-alert-warning" uk-alert>
+            <p>This seller is not currently offering any cards.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+</div>
+{% endblock %}

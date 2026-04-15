@@ -1,0 +1,52 @@
+{% extends "master.html" %}
+
+{% block titulo %}Generate User Ratings{% endblock %}
+
+{% block contenido %}
+<div class="uk-container uk-margin-top">
+    <div class="uk-card uk-card-default uk-card-body">
+        <h2 class="uk-card-title uk-text-center">
+            <span uk-icon="icon: users; ratio: 1.5"></span> Generate User Ratings
+        </h2>
+        
+        <p class="uk-text-center uk-text-muted">
+            Generate synthetic user ratings for the recommendation system.
+            Users will be created with IDs starting from 1.
+        </p>
+        
+        <form method="post" class="uk-form-stacked uk-margin">
+            {% csrf_token %}
+            
+            <div class="uk-margin">
+                <label class="uk-form-label" for="num_users">Number of Users to Generate:</label>
+                <div class="uk-form-controls">
+                    <input type="number" name="num_users" id="num_users" 
+                           class="uk-input uk-form-width-medium" 
+                           placeholder="Enter number of users (1-10000)"
+                           min="1" max="10000" step="1" value="50" required>
+                </div>
+                <p class="uk-text-meta uk-margin-small-top">
+                    Each user will rate 30-80% of the available decks based on their preferences.
+                </p>
+            </div>
+            
+            <div class="uk-alert-warning" uk-alert>
+                <p><span uk-icon="icon: warning"></span> <strong>Warning:</strong> This will delete all existing users and ratings!</p>
+            </div>
+            
+            <div class="uk-margin uk-text-center">
+                <button type="submit" class="uk-button uk-button-primary uk-button-large">
+                    <span uk-icon="icon: bolt"></span> Generate Ratings
+                </button>
+            </div>
+        </form>
+        
+        <hr>
+        <div class="uk-text-center">
+            <a href="/" class="uk-button uk-button-default">
+                <span uk-icon="icon: home"></span> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

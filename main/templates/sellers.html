@@ -1,0 +1,172 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block titulo %}Sellers{% endblock %}
+
+{% block contenido %}
+<style>
+    .seller-link {
+        color: inherit;
+        text-decoration: none;
+    }
+    .seller-link:hover {
+        text-decoration: underline;
+        color: #1e87f0;
+    }
+    .vacation-badge {
+        background-color: #ffc107;
+        color: #333;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+    }
+    .rating-outstanding {
+        color: #2e7d32;
+        font-weight: bold;
+    }
+    .rating-verygood {
+        color: #558b2f;
+    }
+    .rating-good {
+        color: #f57c00;
+    }
+    .rating-bad {
+        color: #d32f2f;
+    }
+</style>
+
+<div class="uk-container uk-margin-top">
+    
+    <!-- Search form with filters -->
+    <div class="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h3 class="uk-card-title">Filter Sellers</h3>
+        <form method="GET" action="{% url 'sellers' %}">
+            <div class="uk-grid-small uk-child-width-1-4@m uk-child-width-1-2@s" uk-grid>
+                
+                <!-- Filter by name -->
+                <div>
+                    <label class="uk-form-label" for="name">Seller Name</label>
+                    <input type="text" name="name" id="name" value="{{ filter_name }}" 
+                           class="uk-input" placeholder="Search by name...">
+                </div>
+                
+                <!-- Filter by country -->
+                <div>
+                    <label class="uk-form-label" for="country">Country</label>
+                    <select name="country" id="country" class="uk-select">
+                        <option value="">-- All --</option>
+                        {% for country in countries %}
+                        <option value="{{ country }}" {% if filter_country == country %}selected{% endif %}>{{ country }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Filter by seller type -->
+                <div>
+                    <label class="uk-form-label" for="seller_type">Seller Type</label>
+                    <select name="seller_type" id="seller_type" class="uk-select">
+                        <option value="">-- All --</option>
+                        {% for type in seller_types %}
+                        <option value="{{ type }}" {% if filter_type == type %}selected{% endif %}>{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="uk-margin-top">
+                <button type="submit" class="uk-button uk-button-primary">
+                    <span uk-icon="search"></span> Search
+                </button>
+                <a href="{% url 'sellers' %}" class="uk-button uk-button-default">
+                    <span uk-icon="refresh"></span> Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Results -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-bottom">
+            <h3 class="uk-card-title uk-margin-remove">Results</h3>
+            <span class="uk-badge">{{ sellers.paginator.count }} seller{{ sellers.paginator.count|pluralize:"s" }} found</span>
+        </div>
+        
+        {% if sellers %}
+        <div class="uk-overflow-auto">
+            <table class="uk-table uk-table-striped uk-table-hover uk-table-small">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Country</th>
+                        <th>Type</th>
+                        <th>Rating</th>
+                        <th class="uk-text-right">Sales</th>
+                        <th class="uk-text-right">Available Items</th>
+                        <th class="uk-text-center">Shipping Days</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seller in sellers %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'seller_detail' seller.id_seller %}" class="seller-link">
+                                <strong>{{ seller.name }}</strong>
+                            </a>
+                            {% if seller.shipping_days is None %}
+                                <span class="vacation-badge">On Vacation</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ seller.country }}</td>
+                        <td>{{ seller.seller_type }}</td>
+                        <td>
+                            <span class="{% if 'Outstanding' in seller.rating %}rating-outstanding{% elif 'Very' in seller.rating %}rating-verygood{% elif 'Good' in seller.rating %}rating-good{% else %}rating-bad{% endif %}">
+                                {{ seller.rating }}
+                            </span>
+                        </td>
+                        <td class="uk-text-right">{{ seller.sales_count }}</td>
+                        <td class="uk-text-right">{{ seller.available_items }}</td>
+                        <td class="uk-text-center">
+                            {% if seller.shipping_days is None %}
+                                <span class="uk-text-warning">Vacation</span>
+                            {% elif seller.shipping_days is not None %}
+                                {{ seller.shipping_days }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if sellers.has_other_pages %}
+        <ul class="uk-pagination uk-flex-center uk-margin-top">
+            {% if sellers.has_previous %}
+                <li><a href="?page=1{% if filter_name %}&name={{ filter_name }}{% endif %}{% if filter_country %}&country={{ filter_country }}{% endif %}{% if filter_type %}&seller_type={{ filter_type }}{% endif %}{% if filter_hide_vacation %}&hide_vacation=on{% endif %}"><span uk-pagination-previous></span></a></li>
+                <li><a href="?page={{ sellers.previous_page_number }}{% if filter_name %}&name={{ filter_name }}{% endif %}{% if filter_country %}&country={{ filter_country }}{% endif %}{% if filter_type %}&seller_type={{ filter_type }}{% endif %}{% if filter_hide_vacation %}&hide_vacation=on{% endif %}">Previous</a></li>
+            {% else %}
+                <li class="uk-disabled"><span><span uk-pagination-previous></span></span></li>
+            {% endif %}
+            
+            <li class="uk-active"><span>Page {{ sellers.number }} of {{ sellers.paginator.num_pages }}</span></li>
+            
+            {% if sellers.has_next %}
+                <li><a href="?page={{ sellers.next_page_number }}{% if filter_name %}&name={{ filter_name }}{% endif %}{% if filter_country %}&country={{ filter_country }}{% endif %}{% if filter_type %}&seller_type={{ filter_type }}{% endif %}{% if filter_hide_vacation %}&hide_vacation=on{% endif %}">Next</a></li>
+                <li><a href="?page={{ sellers.paginator.num_pages }}{% if filter_name %}&name={{ filter_name }}{% endif %}{% if filter_country %}&country={{ filter_country }}{% endif %}{% if filter_type %}&seller_type={{ filter_type }}{% endif %}{% if filter_hide_vacation %}&hide_vacation=on{% endif %}"><span uk-pagination-next></span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span><span uk-pagination-next></span></span></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+        
+        {% else %}
+        <div class="uk-alert uk-alert-warning" uk-alert>
+            <p>No sellers found with the specified filters.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+</div>
+{% endblock %}

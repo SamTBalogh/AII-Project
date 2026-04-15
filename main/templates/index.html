@@ -1,0 +1,76 @@
+{% extends 'master.html' %}
+
+{% block titulo %} MTG Card Market - Home {% endblock %}
+
+{% block contenido %} 
+<div class="uk-container">
+    <h2 class="uk-heading-line uk-text-center"><span>MTG Card Market</span></h2>
+    
+    <div class="uk-grid-match uk-child-width-1-3@m uk-margin-top" uk-grid>
+        <!-- Database Management -->
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title"><span uk-icon="icon: database; ratio: 1.2"></span> Database</h3>
+                <ul class="uk-list uk-list-bullet">
+                    <li><a href="/populate/">Populate Database</a></li>
+                    <li><a href="{% url 'loadWhooshIndex' %}">Load Whoosh Indexes</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Browse Data -->
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title"><span uk-icon="icon: search; ratio: 1.2"></span> Browse</h3>
+                <ul class="uk-list uk-list-bullet">
+                    <li><a href="{% url 'cards' %}">Cards</a></li>
+                    <li><a href="{% url 'decks' %}">Decks</a></li>
+                    <li><a href="{% url 'sellers' %}">Sellers</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Recommendation Systems -->
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title"><span uk-icon="icon: star; ratio: 1.2"></span> Recommendations</h3>
+                <ul class="uk-list uk-list-bullet">
+                    <li><a href="{% url 'loadRS' %}">Load Collaborative RS</a></li>
+                    <li><a href="{% url 'loadContentRS' %}">Load Content-Based RS</a></li>
+                    <li><a href="{% url 'recommendedDecks' %}">Collaborative Filtering</a></li>
+                    <li><a href="{% url 'recommendedDecksContent' %}">Content-Based Filtering</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="uk-grid-match uk-child-width-1-2@m uk-margin-top" uk-grid>
+        <!-- Data Extraction -->
+        <div>
+            <div class="uk-card uk-card-secondary uk-card-body">
+                <h3 class="uk-card-title"><span uk-icon="icon: download; ratio: 1.2"></span> Data Extraction</h3>
+                <ul class="uk-list uk-list-bullet">
+                    <li><a href="{% url 'data_generate_set_urls' %}" class="uk-link-muted">Generate Set URLs</a></li>
+                    <li><a href="{% url 'data_extract_card_links' %}" class="uk-link-muted">Extract Card Links</a></li>
+                    <li><a href="{% url 'data_rename_card_files' %}" class="uk-link-muted">Rename Card Files</a></li>
+                    <li><a href="{% url 'data_extract_card_data' %}" class="uk-link-muted">Extract Card Data</a></li>
+                    <li><a href="{% url 'data_extract_seller_links' %}" class="uk-link-muted">Extract Seller Links</a></li>
+                    <li><a href="{% url 'data_extract_seller_data' %}" class="uk-link-muted">Extract Seller Data</a></li>
+                    <li><a href="{% url 'data_extract_seller_card_data' %}" class="uk-link-muted">Extract Seller Card Data</a></li>
+                    <li><a href="{% url 'generate_ratings' %}" class="uk-link-muted">Generate User Ratings</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Author Info -->
+        <div>
+            <div class="uk-card uk-card-primary uk-card-body">
+                <h3 class="uk-card-title"><span uk-icon="icon: user; ratio: 1.2"></span> Author</h3>
+                <p><strong>Samuel Tamayo Balogh</strong></p>
+                <p>Acceso Inteligente a la Información Course Project</p>
+                <p>Uvus: samtambal</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

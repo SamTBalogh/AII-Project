@@ -1,0 +1,169 @@
+{% extends "master.html" %}
+
+{% block titulo %}Recommended Decks{% endblock %}
+
+{% block contenido %}
+<div class="uk-container uk-margin-top">
+    <div class="uk-card uk-card-default uk-card-body">
+        <h2 class="uk-card-title uk-text-center">
+            <span uk-icon="icon: star; ratio: 1.5"></span> Deck Recommendations
+        </h2>
+        
+        <p class="uk-text-center uk-text-muted">
+            Get personalized deck recommendations based on collaborative filtering.
+        </p>
+        
+        <!-- User ID Input Form -->
+        <form method="get" class="uk-margin">
+            <div class="uk-grid-small uk-flex-middle" uk-grid>
+                <div class="uk-width-expand@s">
+                    <label class="uk-form-label" for="user_id">Enter User ID:</label>
+                    <input type="number" name="user_id" id="user_id" class="uk-input" 
+                           placeholder="Enter user ID (e.g.: 1, 2, 3...)" 
+                           min="1" step="1"
+                           value="{{ form.user_id.value|default:'' }}">
+                </div>
+                <div class="uk-width-auto@s">
+                    <label class="uk-form-label">&nbsp;</label>
+                    <button type="submit" class="uk-button uk-button-primary">
+                        <span uk-icon="icon: search"></span> Get Recommendations
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        {% if error_message %}
+        <div class="uk-alert-danger" uk-alert>
+            <a class="uk-alert-close" uk-close></a>
+            <p><span uk-icon="icon: warning"></span> {{ error_message }}</p>
+        </div>
+        {% endif %}
+        
+        {% if selected_user %}
+        <hr class="uk-divider-icon">
+        
+        <!-- User Info -->
+        <div class="uk-alert-primary" uk-alert>
+            <p>
+                <strong>User ID:</strong> {{ selected_user.id_user }} |
+                <strong>Username:</strong> {{ selected_user.username }}<br>
+                {% if selected_user.preferred_archetype %}
+                <strong>Preferred Archetype:</strong> {{ selected_user.preferred_archetype }}<br>
+                {% endif %}
+                {% if selected_user.preferred_colors %}
+                <strong>Preferred Colors:</strong> {{ selected_user.preferred_colors }}
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="uk-grid-match uk-child-width-1-2@m uk-grid-divider" uk-grid="masonry: false">
+            <!-- Recommendations Column -->
+            <div>
+                <div class="uk-card uk-card-default uk-card-body uk-card-small">
+                    <h3 class="uk-card-title"><span uk-icon="icon: list"></span> Top Recommended Decks</h3>
+                    
+                    {% if recommendations %}
+                    <div class="uk-overflow-auto">
+                        <table class="uk-table uk-table-striped uk-table-hover uk-table-small">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Deck</th>
+                                    <th>Score</th>
+                                    <th>Meta %</th>
+                                    <th>Archetype</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score, deck in recommendations %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <a href="{% url 'deck_detail' deck.id_deck %}">{{ deck.name }}</a>
+                                        {% if deck.alternative_name %}
+                                        <br><small class="uk-text-muted">{{ deck.alternative_name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="uk-badge">{{ score|floatformat:2 }}</span></td>
+                                    <td>{{ deck.meta_percentage|floatformat:2 }}%</td>
+                                    <td>{{ deck.archetype }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="uk-alert-warning" uk-alert>
+                        <p>No recommendations available for this user. Make sure to:</p>
+                        <ol>
+                            <li>Generate user ratings first (Data Extraction → Generate User Ratings)</li>
+                            <li>Load the recommendation system (Home → Load Recommendation System)</li>
+                        </ol>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Similar Users Column -->
+            <div>
+                <div class="uk-card uk-card-default uk-card-body uk-card-small">
+                    <h3 class="uk-card-title"><span uk-icon="icon: users"></span> Similar Users</h3>
+                    
+                    {% if similar_users %}
+                    <div class="uk-overflow-auto">
+                        <table class="uk-table uk-table-striped uk-table-small">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>User</th>
+                                    <th>Similarity</th>
+                                    <th>Preferences</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score, user in similar_users %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td><span class="uk-badge">{{ score|floatformat:3 }}</span></td>
+                                    <td>
+                                        {% if user.preferred_archetype %}{{ user.preferred_archetype }}{% endif %}
+                                        {% if user.preferred_colors %}<br><small>{{ user.preferred_colors }}</small>{% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="uk-alert-muted" uk-alert>
+                        <p>No similar users found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <!-- No user selected -->
+        <div class="uk-placeholder uk-text-center">
+            <span uk-icon="icon: info; ratio: 2"></span>
+            <p class="uk-text-lead">Enter a user ID to see personalized deck recommendations</p>
+            <p class="uk-text-muted">
+                The recommendation system uses collaborative filtering based on user ratings.
+            </p>
+        </div>
+        {% endif %}
+        
+        <hr>
+        <div class="uk-text-center">
+            <a href="{% url 'recommendedDecksContent' %}" class="uk-button uk-button-secondary uk-margin-small-right">
+                <span uk-icon="icon: users"></span> Content based-recomendations
+            </a>
+            <a href="/" class="uk-button uk-button-default">
+                <span uk-icon="icon: home"></span> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
