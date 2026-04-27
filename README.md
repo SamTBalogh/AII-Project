@@ -43,6 +43,67 @@ The application scrapes data from [CardMarket](https://www.cardmarket.com) and [
 - **Web Scraping**: [AutoScrape](https://github.com/DrankRock/AutoScrape) for CardMarket. MTGGolsfish is scraped inside the app.
 - **Recommendation Engine**: Shelve-based collaborative filtering
 
+## How to Run the Project
+
+From the repository root:
+
+```bash
+cd AII-Project
+```
+
+Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+On Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+On macOS/Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+Install the required Python packages:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install "Django>=6.0" beautifulsoup4 Whoosh
+```
+
+Create the local SQLite database and apply migrations:
+
+```bash
+python manage.py migrate
+```
+
+Start the development server:
+
+```bash
+python manage.py runserver
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+On a first run, load the application data before browsing cards, decks, or sellers:
+
+1. Open `http://127.0.0.1:8000/populate/` and populate the database.
+2. Open `http://127.0.0.1:8000/loadWhooshIndex/` to build the search indexes.
+3. Go to `http://127.0.0.1:8000/cards/`.
+
+The `/cards/`, `/decks/`, and `/sellers/` pages use Whoosh search indexes, so they will appear empty until the indexes are built from the database.
+
+If `python` is not available on Windows, try the same commands using `py` instead.
+
 ## Data Scraping with AutoScrape
 
 This project uses [AutoScrape](https://github.com/DrankRock/AutoScrape) to extract data from CardMarket. AutoScrape is a tool that automates web scraping with human-like behavior to avoid detection.

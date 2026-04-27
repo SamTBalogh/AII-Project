@@ -1,0 +1,4 @@
+# Vendored UIkit runtime assets should not determine GitHub language stats.
+static/css/uikit.min.css linguist-vendored
+static/js/uikit.min.js linguist-vendored
+static/js/uikit-icons.min.js linguist-vendored
